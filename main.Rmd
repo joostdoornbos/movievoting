@@ -1,0 +1,109 @@
+---
+title: "main"
+author: "Joost Doornbos"
+date: "2/7/2022"
+output: pdf_document
+---
+
+
+```{r data}
+library(tidyverse)
+# replaced only the single spaces by underscores, changed `a to a, in notepad++
+# data from ftp dot fu-berlin dot de/pub/misc/movies/database/frozendata
+# file is ratings dot list dot gz, created at 22 dec 2017 00:00:00
+df <- readr::read_table("ratingdata.txt", col_names = T,
+                        col_types = cols("c", "i", "d", "c"))
+df_top <- df[1:250, ]
+df_bot <- df[251:260, ]
+df_all <- df[261:dim(df)[1], ]
+```
+
+
+```{r data conversion functions}
+dist_convert <- function(vec) {
+  
+  vec <- replace(vec, vec==".", "10")
+  vec <- replace(vec, vec=="*", "11")
+  
+  old <- c(10, 0:9, 11)
+  new <- c(0, seq(4.5, 94.5, 10), 100)
+  
+  vec <- as.double(as.character(factor(as.integer(vec), old, new)))
+  
+  mat <- t(matrix(vec, byrow = T, ncol = 10))
+  
+  return(t(scale(mat, F, colSums(mat))))
+  
+}
+
+dist_parse <- function(df) {
+  
+  df_dist <- tibble(Xnone = NA, X1_9 = NA, X10_19 = NA, X20_29 = NA,
+                    X30_39 = NA, X40_49 = NA, X50_59 = NA, X60_69 = NA,
+                    X70_79 = NA, X80_89 = NA, X90_99 = NA, Xall = NA,
+                    .rows = dim(df)[1])
+  col.names <- c("Xnone",  "X1_9",   "X10_19", "X20_29",
+                 "X30_39", "X40_49", "X50_59", "X60_69",
+                 "X70_79", "X80_89", "X90_99", "Xall")
+  x <- unlist(strsplit(df$Distribution, split = ""))
+  
+  y <- as.data.frame(dist_convert(x))#, col.names = col.names) -- V1 for rating 1 etc
+  
+  return(y)
+  
+}
+```
+
+
+```{r normal discrete truncated function}
+tnorm <- function(x, m, s, a, b) {
+  
+  ifelse(x > a & x < b,
+         dnorm(x, m, s) / (pnorm(b, m, s) - pnorm(a, m, s)),
+         0)
+  
+}
+
+discnorm <- function(x, m, s) {
+  
+  ifelse(x %% 1 == 0,
+         pnorm(x + 1 / 2, m, s) - pnorm(x - 1 / 2, m, s),
+         0)
+  
+}
+
+dtnorm <- function(x, m, s, a, b) {
+  
+  ifelse(x > a & x < b,
+         discnorm(x, m, s) / sum(discnorm((floor(a) + 1):(ceiling(b) - 1), m, s)),
+         0)
+  
+}
+
+tdnorm <- function(x, m, s, a, b) {
+  
+  # check if same as above -- where to cut off?
+  
+}
+
+fnorm <- function(x, m, s, a, b, p, q) {
+  # a < b - 3
+  
+  len <- length((floor(a) + 1):(ceiling(b) - 1)) - 2
+  
+  return((dtnorm(x, m, s, a, b) +
+            c(p, rep(0, len), q, rep(0, length(x) - len - 2))) / (1 + p + q))
+  
+}
+```
+
+
+```{r example plot}
+plot(seq(1,10), fnorm(seq(1,10), 7, 1, 0, 11, 1/50, 1/15), 'h')
+```
+
+
+```{r fit parameters to vote distribution top 250}
+
+```
+
