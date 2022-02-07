@@ -87,12 +87,15 @@ tdnorm <- function(x, m, s, a, b) {
 }
 
 fnorm <- function(x, m, s, a, b, p, q) {
-  # a < b - 3
+  # a < b - 3, x int
   
-  len <- length((floor(a) + 1):(ceiling(b) - 1)) - 2
+  lb <- floor(a) + 1
+  ub <- ceiling(b) - 1
+  len <- length(lb:ub) - 2
   
-  return((dtnorm(x, m, s, a, b) +
-            c(p, rep(0, len), q, rep(0, length(x) - len - 2))) / (1 + p + q))
+  sc <- c(rep(0, lb - min(x)), p, rep(0, len), q, rep(0, max(x) - ub))
+  
+  return((dtnorm(x, m, s, a, b) + sc) / (1 + p + q))
   
 }
 ```
