@@ -139,21 +139,25 @@ fnorm <- function(x, m, s, a = 0, b = 11, p, q) {
 ```
 
 
-```{r example plot}
-plot(seq(1,10), fnorm(seq(1,10), 7, 1, 0, 11, 1/50, 1/15), 'h')
+```{r example plots}
+plot(seq(1,10), fnorm(seq(1,10), 7.02, 1, 0, 11, 1/50, 1/15), 'h')
+plot(seq(1,10), dbinom(seq(0,9), 9, 0.55), 'h')
 ```
 
 
 ```{r fit parameters to vote distribution top 250}
-# library(MASS)
 library(magrittr)
 values <- df_top[1, ] %>% dist_convert() %>% as.numeric()
 # ps = c(m, s, p, q)
 mse <- function(ps, values) {sum((fnorm(1:10, ps[1], ps[2], 0, 11, ps[3], ps[4])
                                   - values)^2)}
-# optim something?
-optim(c(4.5, 1, 0.1, 0.1), mse, values = values)
-#optim(c(0, 1, 0, 0), mse)
-# weird stuff -- prob small mistake
+
+U <- cbind(rep(0,3), diag(3))
+o1 <- constrOptim(c(4.5, 1, 0.1, 0.1), ui = U, ci = c(0, 0, 0), f = mse,
+                  values = values, grad = NULL)
+o2 <- optim(c(0, 1, 0, 0), mse, values = values)
+U <- rbind(c(-1, 0, 0, 0), diag(4))
+o3 <- constrOptim(c(4.5, 1, 0.1, 0.1), mse, NULL, U, c(-10, 0, 0, 0, 0),
+                  values = values)
 ```
 
