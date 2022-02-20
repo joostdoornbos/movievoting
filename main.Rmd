@@ -52,10 +52,10 @@ fnorm <- function(x, m = 4.5, s = 1, a = 0, b = 11, p = 0, q = 0) {
   # p, q are added to account for people overly giving a 1 or 10,
   # but the params of course should be able to be added
   # (H) reminds it is a human created error msg
-  if ((p != 0 | q != 0) & !any(x == 1 | x == 10)) {stop("cannot add p, q (H)")}
+  if ((p != 0 | q != 0) & !any(x == 1 | x == 10)) stop("Cannot add p, q (H)")
   
   # necessary to have two values to add p,q to and one in between
-  if (!(a < b - 3)) {stop("a < b - 3 necessary (H)")}
+  if (!(a < b - 3)) stop("a < b - 3 necessary (H)")
   
   # convert continuous normal pdf into discrete
   # it is centered at integers, since ratings are 1:10
@@ -146,18 +146,72 @@ plot(seq(1,10), dbinom(seq(0,9), 9, 0.55), 'h')
 
 
 ```{r fit parameters to vote distribution top 250}
-library(magrittr)
-values <- df_top[1, ] %>% dist_convert() %>% as.numeric()
-# ps = c(m, s, p, q)
-mse <- function(ps, values) {sum((fnorm(1:10, ps[1], ps[2], 0, 11, ps[3], ps[4])
-                                  - values)^2)}
+fit_fun <- function(df, start_params, opt_type, min_type, distr_fun) {
+  
+  # TODO: add distr_fun = not just fnorm,
+  #       add stop for invalid starting parameters
+  #       check overlap in opt_types
+  
+  opt_types <- c("constr_mean", "endpoint_inflation_negative",
+                 "endpoint_inflation_positive")
+  if (!(opt_type %in% opt_types)) stop("Wrong optim type (H)")
+  
+  distr_funs <- c("fnorm")
+  if (!(distr_fun %in% distr_funs)) stop("Invalid fitting distribution (H)")
+  
+  min_types <- c("L1", "L2", "CE")
+  if (!(min_type %in% min_types)) stop("Invalid loss function (H)")
+  
+  min_type <- which(min_types == min_type)
+  
+  distr_fun <- get(distr_fun)
+  
+  # ps = c(mean, stdev, prob_inflate_bottom, prob_inflate_top)
+  # L1, L2 norms and cross-entropy.
+  min_funs <- list(L2 = function(ps, values) {
+                     sum((distr_fun(1:10, ps[1], ps[2], 0, 11, ps[3], ps[4]) - values)^2)},
+    
+                   L1 = function(ps, values) {
+                     sum(abs(distr_fun(1:10, ps[1], ps[2], 0, 11, ps[3], ps[4]) - values))},
+    
+                   CE = function(ps, values) {
+                     -1 * sum(values * log(distr_fun(1:10, ps[1], ps[2], 0, 11, ps[3], ps[4])))})
+  
+  min_fun <- min_funs[[min_type]]
+  
+  if (opt_type == "constr_mean") {
+    
+    # Constrain the mean to be between 1 and 10.
+    return(constrOptim(start_params, min_fun, NULL, rbind(matrix(c(-1, rep(0, 3)), nrow = 1),
+                                                          diag(4)), c(-10, rep(0, 4)), values = df))
+    
+  } else if (opt_type == "endpoint_inflation_negative") {
+    
+    # Will allow p, q to be negative, as long as f(1)+p and f(10)+q are positive.
+    # Not sure if it will ever be useful, and the bounds would be dynamic.
+    stop("WIP (H)")
+    
+  } else if (opt_type == "endpoint_inflation_positive") {
+    
+    # Constrain the added endpoint inflation >=0.
+    return(constrOptim(start_params, min_fun, NULL, cbind(rep(0,3), diag(3)),
+                       c(0, 0, 0), values = df))
+    
+  }
+  
+}
+```
 
-U <- cbind(rep(0,3), diag(3))
-o1 <- constrOptim(c(4.5, 1, 0.1, 0.1), ui = U, ci = c(0, 0, 0), f = mse,
-                  values = values, grad = NULL)
-o2 <- optim(c(0, 1, 0, 0), mse, values = values)
-U <- rbind(c(-1, 0, 0, 0), diag(4))
-o3 <- constrOptim(c(4.5, 1, 0.1, 0.1), mse, NULL, U, c(-10, 0, 0, 0, 0),
-                  values = values)
+
+```{r testing}
+library(magrittr)
+library(tictoc)
+tic()
+values <- df_top[1, ] %>% dist_convert() %>% as.numeric()
+fit_fun(dist_convert(df_top[1, ]), c(4.5, 1, 0.1, 0.1), "constr_mean", "L2",
+        "fnorm")
+toc()
+# TODO: make it (significantly) faster
+
 ```
 
