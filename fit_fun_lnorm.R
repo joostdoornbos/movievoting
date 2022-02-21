@@ -18,7 +18,7 @@ fit_fun_lnorm <- function(df, ps, opt_type = "constr_mean",
   min_types <- c("L2", "L1", "CE")
   if (!(min_type %in% min_types)) stop("Invalid loss function (H)")
   
-  source("fnorm.R")
+  source("lnorm.R")
   
   min_type <- which(min_types == min_type)
   
@@ -42,7 +42,7 @@ fit_fun_lnorm <- function(df, ps, opt_type = "constr_mean",
     # Constrain the mean to be between 1 and 10.
     ui <- matrix(c(-1, 1, numeric(2)), nrow = 2)
     ci <- c(-10, 1)
-    return(constrOptim(params, min_fun, NULL, ui, ci, values = df))
+    return(constrOptim(ps, min_fun, NULL, ui, ci, values = df))
     
   }
   

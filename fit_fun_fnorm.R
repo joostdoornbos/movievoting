@@ -43,7 +43,7 @@ fit_fun_fnorm <- function(df, ps, opt_type = "constr_mean",
     # Constrain the mean to be between 1 and 10.
     ui <- rbind(matrix(c(-1, numeric(3)), nrow = 1), diag(4))
     ci <- c(-10, numeric(4))
-    return(constrOptim(params, min_fun, NULL, ui, ci, values = df))
+    return(constrOptim(ps, min_fun, NULL, ui, ci, values = df))
     
   } else if (opt_type == "endpoint_inflation_negative") {
     
@@ -56,7 +56,7 @@ fit_fun_fnorm <- function(df, ps, opt_type = "constr_mean",
     # Constrain the added endpoint inflation >=0.
     ui <- cbind(numeric(3), diag(3))
     ci <- numeric(3)
-      return(constrOptim(params, min_fun, NULL, ui, ci, values = df))
+      return(constrOptim(ps, min_fun, NULL, ui, ci, values = df))
     
   }
   

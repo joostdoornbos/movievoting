@@ -44,6 +44,11 @@ easy_fnorm <- function(pars, x) {
 
 
 ```{r testing}
+# TODO: everywhere constrain sigma >= 0
+fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "fnorm", "constr_mean", "L2")
+fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "fnorm", "endpoint_inflation_positive", "CE")
+fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "lnorm", "constr_mean", "L2")
+fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "lnorm", "constr_mean", "CE")
 library(magrittr)
 library(tictoc)
 tic()
