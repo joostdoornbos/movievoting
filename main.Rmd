@@ -29,16 +29,14 @@ source("fit_fun.R")
 
 
 ```{r example plots}
-plot(1:10, fnorm(1:10, 7.02, 1, 0, 11, 1/50, 1/15), 'h')
-plot(1:10, dbinom(0:9, 9, 0.55), 'h')
+plot(1:10, fnorm(1:10, 7.02, 1, 0, 11, 1/50, 1/15), "h")
+plot(1:10, dbinom(0:9, 9, 0.55), "h")
 ```
 
 
 ```{r fit parameters to vote distribution top 250}
 easy_fnorm <- function(pars, x) {
-  
   fnorm(x, pars[1], pars[2], 0, 11, pars[3], pars[4])
-  
 }
 ```
 
