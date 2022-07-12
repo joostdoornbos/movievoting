@@ -12,8 +12,10 @@ library(readr)
 # data from ftp dot fu-berlin dot de/pub/misc/movies/database/frozendata
 # file is ratings dot list dot gz, created at 22 dec 2017 00:00:00
 # there was also some text in the middle -- removed that too
-df <- readr::read_table("ratingdata.txt", col_names = T,
-                        col_types = cols("c", "i", "d", "c"))
+df <- readr::read_table("ratingdata.txt",
+    col_names = T,
+    col_types = cols("c", "i", "d", "c")
+)
 df_top <- df[1:250, ]
 df_bot <- df[251:260, ]
 df_all <- df[261:dim(df)[1], ]
@@ -29,38 +31,56 @@ source("fit_fun.R")
 
 
 ```{r example plots}
-plot(1:10, fnorm(1:10, 7.02, 1, 0, 11, 1/50, 1/15), "h")
+plot(1:10, fnorm(1:10, 7.02, 1, 0, 11, 1 / 50, 1 / 15), "h")
 plot(1:10, dbinom(0:9, 9, 0.55), "h")
 ```
 
 
 ```{r fit parameters to vote distribution top 250}
 easy_fnorm <- function(pars, x) {
-  fnorm(x, pars[1], pars[2], 0, 11, pars[3], pars[4])
+    fnorm(x, pars[1], pars[2], 0, 11, pars[3], pars[4])
 }
 ```
 
 
 ```{r testing}
 # TODO: everywhere constrain sigma >= 0
-fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "fnorm", "constr_mean", "L2")
-fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "fnorm", "endpoint_inflation_positive", "CE")
-fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "lnorm", "constr_mean", "L2")
-fit_fun(values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1), "lnorm", "constr_mean", "CE")
+fit_fun(
+    values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1),
+    "fnorm", "constr_mean", "L2"
+)
+fit_fun(
+    values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1),
+    "fnorm", "endpoint_inflation_positive", "CE"
+)
+fit_fun(
+    values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1),
+    "lnorm", "constr_mean", "L2"
+)
+fit_fun(
+    values, list(test = 1, m = 5, s = 1, p = 0.1, q = 0.1),
+    "lnorm", "constr_mean", "CE"
+)
 library(magrittr)
 library(tictoc)
 tic()
-values <- df_top[1, ] %>% dist_convert() %>% as.numeric()
-fit_fun(values, c(4.5, 1, 0.1, 0.1), "constr_mean", "L2",
-        "fnorm")
-fit_fun(values, c(4.5, 1, 0.1, 0.1), "constr_mean", "L2",
-        "lnorm")
+values <- df_top[1, ] %>%
+    dist_convert() %>%
+    as.numeric()
+fit_fun(
+    values, c(4.5, 1, 0.1, 0.1), "constr_mean", "L2",
+    "fnorm"
+)
+fit_fun(
+    values, c(4.5, 1, 0.1, 0.1), "constr_mean", "L2",
+    "lnorm"
+)
 toc()
 # TODO: make it (significantly) faster
 #       check if gradient can be used somewhere
 ps <- fit_fun_lnorm(values, c(4.5, 1), min_type = "CE")
-plot(1:10, lnorm(1:10, ps$par[1], ps$par[2]), 'h')
-plot(1:10, values, 'h')
+plot(1:10, lnorm(1:10, ps$par[1], ps$par[2]), "h")
+plot(1:10, values, "h")
 # mix both -- latent + boundary effect
 ```
 
